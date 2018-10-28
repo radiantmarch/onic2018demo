@@ -13,7 +13,7 @@ Library        unicon.robot.UniconRobot
 *** Variables ***
 # Defining variables that can be used elsewhere in the test data.
 # ${testbed}     /genie_tests/default_testbed.yaml
-${testbed}     demo_testbed.yaml
+${testbed}     default_testbed.yaml
 
 
 *** TestCases ***
@@ -22,12 +22,12 @@ ${testbed}     demo_testbed.yaml
 # Connect to devices using CLI
 UUT デバイスに接続
     use genie testbed "${testbed}"
-    connect to devices "uut"
-    connect to devices "r2"
-    connect to devices "r3"
+    connect to devices "ios1"
+    connect to devices "ios2"
+    connect to devices "nxos3"
 
 Execute and parse "show bgp all neighbor" on IOS-XE
-    ${output}=  parse "genie.libs.parser.show_bgp.ShowBgpAllNeighbors" on device "uut"
+    ${output}=  parse "genie.libs.parser.show_bgp.ShowBgpAllNeighbors" on device "ios1"
 
     ${json}=            evaluate    ast.literal_eval('''${output}''')       ast
     ${json_str}=        evaluate    json.dumps(${json})                     json
