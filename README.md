@@ -170,7 +170,7 @@ packages reload
 
 ## デモ準備
 
-- 上記のインストールまで終わっていること
+- 前提: 上記のインストールまで終わっていること
 
 - 環境の確認
 
@@ -179,9 +179,10 @@ packages reload
 ### VIRL & NSO 準備
 
 - VIRL 環境変数を設定
+    - {VIRL_IP} に自身の環境に合わせた値を設定してください
 
 ```
-export VIRL_HOST=10.71.158.113
+export VIRL_HOST={VIRL_IP}
 export VIRL_USERNAME=guest
 export VIRL_PASSWORD=guest
 ```
@@ -195,7 +196,7 @@ cat topology.virl
 
 - VIRL シミュレーションの起動
 ```
-cd; cd onicdemo
+cd; cd onicdemo/demo
 virl ls
 virl up
 (起動まで待機)
@@ -212,7 +213,7 @@ virl generate pyats
 ```
 
 
-- NSO 環境変数
+- NSO 環境変数の設定
     - {NSO_IP} を自身の環境のものと合わせる
 
 ```
@@ -228,10 +229,13 @@ export NSO_PASSWORD=cisco
 virl generate nso --syncfrom
 ```
 
+- これで、NSO に VIRL で動作する 3台のデバイスが登録され、sync-from まで完了します。
 
 
 ### テストベッドファイルを環境に合わせて修正
-- tacacs セクションと passwords セクションを環境変数でなくすべて直打ちで cisco に変更
+
+- 上記で生成した default_testbed.yaml をエディタで編集します
+- tacacs セクションと passwords セクションを環境変数でなくすべて直打ちで cisco に変更します
 
 ```
     tacacs:
@@ -242,17 +246,16 @@ virl generate nso --syncfrom
         line: cisco
 ```
 
-- devices: 内の ios1 の alias を uut に変更する
-    - 必須。uut が無いと robot 実行時に KeyError が出てしまう
-
+- devices: セクション内の ios1 の alias を uut に変更する
+    - 必須。uut が無いと robot 実行時に KeyError が出てしまうようです
 
 ```
     ios1:
       alias: uut
 ```
 
-- devices: 内に NSO に接続するためのセクションを追加する
-    - {NSO IP Address} の部分を実際の IP アドレスに書き換えること
+- devices: セクション内に NSO に接続するためのセクションを追加する
+    - {NSO IP Address} の部分を実際の IP アドレスに書き換えてください
 
 ```
 nso:
@@ -280,7 +283,11 @@ nso:
 
 ### その他の準備
 
-- robot コマンドでログを生成できるように Alias でオプションを設定
+- デモ用PC 上で GNU ツールが使えるようにする (Mac の場合)
+    - brew install coreutils
+
+- デモ用PC 上で、robot コマンドでログを生成できるように Alias でオプションを設定
+    - Mac でない場合は gdate の部分を適宜修正してください
 
 ```
 alias robot='robot -d archive/$(LC_ALL=C gdate +"%Y%m%d_%H%M%S")'
@@ -366,7 +373,6 @@ Report:  ***onicdemo/demo/archive/20181028_112114/report.html
     - デモ2 では bgp コマンド
 
 - `demo2.robot` の確認
-    -
 
 - robot コマンドでテストを実行
 `robot demo2.robot`
@@ -397,8 +403,7 @@ Report:  ***onicdemo/demo/archive/20181028_113639/report.html
 ```
 
 - 出力の中の Original JSON のテキストを https://jsonformatter.curiousconcept.com/ などで整形して確認
-
-- list_of_neighbors をキーとするエントリに、ネイバーのリストが表示されている
+    - list_of_neighbors をキーとするエントリに、ネイバーのリストが表示されている
 
 - ポイント
     - Genie ライブラリの一つである Parser の genie.libs.parser.show_bgp.ShowBgpAllNeighbors を使ってコマンド出力をパース
