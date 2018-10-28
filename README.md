@@ -1,34 +1,41 @@
 # Demo for ONIC 2018
 
-ONIC 2018 () 講演 [1] で行った pyATS + NSO + VIRL のデモです
+ONIC 2018 講演 [1] で行った pyATS + NSO + VIRL のデモ用のレポジトリです
 
 [1] http://onic.jp/program-detail/#s05
 
-講演資料はこちら
+講演資料はこちら: [PDF][775e7e8b]
+
+  [775e7e8b]: ./presentations/onic2018_cisco_netdevops_pyats_nso_ss_v1.1.pdf "PDF"
 
 この README ファイルはデモを実行するための情報を記載しています。
 
-pyATS の概要についてはこちら:
-NSO についてはこちら:
-VIRL についてはこちら:
+- pyATS の概要についてはこちら: https://developer.cisco.com/site/pyats/
+
+- NSO についてはこちら: https://developer.cisco.com/docs/nso/#!getting-nso/getting-nso
+
+- VIRL についてはこちら: https://developer.cisco.com/site/virl/
 
 
 ## デモ環境 要件
 
-- python 3 実行環境
+- PC 上での python 3 実行環境
 - インターネット接続
-	- git clone, pip の実行が必要
+	- git clone, pip の実行のため
 - VIRL サーバ
+    - ESXi などの仮想環境上の VM として動作させる必要があります
 - NSO サーバ
-    - Ubuntu VM 上にインストール
+    - Linux 上にインストールします
 
 
-## デモ環境
+## 今回のデモ環境
+必ずしもこの環境でなくてはいけないわけではありません。
 
 - Client
 	- MacBook Pro, macOS 10.13.6
 	- Python 3.4.7 (virtualenv)
     	- Note: 3.4 以降であれば動くはずだが、3.6 の若いバージョンでは動作しなかったことがあるので注意
+	- pyenv
 
 - Servers
 	- VIRL VM (1.5.154) - 24vCPU, 128GB DRAM
@@ -42,15 +49,21 @@ VIRL についてはこちら:
     	- Mac 上で動作させても問題ない
 
 
-## インストール
+## インストール＆セットアップ
 
-- Python 環境の準備
-	- 今回は pyenv を利用
-		- (セットアップ方法は https://qiita.com/koooooo/items/b21d87ffe2b56d0c589b を参照)
+### Python 環境の準備 @ Mac
 
+- 今回は pyenv を利用します
+	- セットアップ方法は https://qiita.com/koooooo/items/b21d87ffe2b56d0c589b を参照のこと
+
+作業ディレクトリ
 ```
 cd; mkdir onicdemo
 cd onicdemo
+```
+
+環境セットアップ
+```
 pyenv local 3.4.7
 pip install --upgrade pip
 pip install virtualenv
@@ -58,12 +71,12 @@ virtualenv venv
 source venv/bin/activate
 ```
 
-- 今後は常にこの virtual env で作業する。別のターミナルを開いた場合も毎回 source コマンドを実行する
+- 今後は常にこの virtualenv 環境で作業する。別のターミナルを新しく開いた場合も毎回 source コマンドを実行するのを忘れないこと
 
 - Git レポジトリをクローン
 
 ```
-git clone xxxx demo
+git clone https://github.com/radiantmarch/onic2018demo.git demo
 
 ```
 
@@ -84,12 +97,86 @@ virlutils
 ```
 
 
+### VIRL のインストール
+
+ブログを参照してください: https://qiita.com/radiantmarch/items/a3c0685d8a4c7468e878
+
+公式ガイドは http://virl.cisco.com/
+
+インストール後、デモを実行する PC から VIRL に接続できるようにしておいてください
+
+
+### NSO のインストール
+
+- NSO を購入していない場合、NSO のトライアル版がこちらからダウンロードできます [Getting NSO][9316747d]
+
+  [9316747d]: https://developer.cisco.com/docs/nso/#!getting-nso/getting-nso "Getting NSO"
+
+    - トライアル版に付属している NED は最新版ではなく制限がありますのでご注意ください。
+
+- インストール方法については、Cisco Community にガイドがありますので参照してください [NSO How To Install][449aed00]
+
+  [449aed00]: https://community.cisco.com/t5/%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%A4%E3%83%B3%E3%83%95%E3%83%A9%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%83%81%E3%83%A3-%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/nso-%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E6%96%B9%E6%B3%95/ta-p/3164587 "NSO How To Install"
+
+
+- NSO をインストールする先のログイン情報は username: cisco passwor: cisco にしておきます
+    - 異なる場合は、この先の設定を適宜読み替えてください
+
+
+- インストール後
+```
+cd
+ncs-setup --dest ncs-run
+cd ncs-run
+```
+
+- ncs.conf ファイルを編集します
+    - デフォルトの Syntax スタイルを c (cisco) にします
+    - ssh port 2024 版で NSO CLI に直接接続できるようにします
+
+```
+<cli>
+  <enabled>true</enabled>
+  <style>c</style>
+  <ssh>
+    <enabled>true</enabled>
+    <ip>0.0.0.0</ip>
+    <port>2024</port>
+  </ssh>
+```
+
+- デモ用 PC から接続できるか確認します
+`ssh -l cisco -p 2024 {NSO_IP}`
+
+
+- cisco-ios および cisco-nx の NED を packages ディレクトリに展開・配置しておきます
+
+```
+$ pwd
+/home/cisco/ncs-run/packages
+$ ls
+cisco-ios  cisco-nx
+```
+
+- NSO CLI にアクセスして NED を読み込みます
+
+```
+ncs_cli -u admin
+packages reload
+```
+
+
+
+
 ## デモ準備
+
+- 上記のインストールまで終わっていること
 
 - 環境の確認
 
 ![demo_env](images/onic2018_cisco_netdevops_pyats_nso_ss_v1_p14.png)
 
+### VIRL & NSO 準備
 
 - VIRL 環境変数を設定
 
@@ -113,7 +200,8 @@ virl ls
 virl up
 (起動まで待機)
 virl nodes
-(すべてのノードが ACTIVE 表示されたらOK)
+(すべてのノードが ACTIVE 表示され、REACHABLE になれば OK)
+(Note: nxos3 については REACHABLE にならない場合がありますがそのまま進めてOK)
 ```
 
 - VIRL トポロジから pyATS 用テストベッドファイルを生成
@@ -123,14 +211,80 @@ virl generate pyats
 => default_testbed.yaml ファイルが生成される
 ```
 
-- テストベッドファイルを環境に合わせて修正
-    -
 
+- NSO 環境変数
+    - {NSO_IP} を自身の環境のものと合わせる
+
+```
+export NSO_HOST={NSO_IP}
+export NSO_USERNAME=cisco
+export NSO_PASSWORD=cisco
+```
+
+- VIRL トポロジから NSO にデバイスを登録
+    - Note: nxos3 は失敗することがあります。そのまま進めてOK)
+
+```
+virl generate nso --syncfrom
+```
+
+
+
+### テストベッドファイルを環境に合わせて修正
+- tacacs セクションと passwords セクションを環境変数でなくすべて直打ちで cisco に変更
+
+```
+    tacacs:
+        username: cisco
+    passwords:
+        tacacs: cisco
+        enable: cisco
+        line: cisco
+```
+
+- devices: 内の ios1 の alias を uut に変更する
+    - 必須。uut が無いと robot 実行時に KeyError が出てしまう
+
+
+```
+    ios1:
+      alias: uut
+```
+
+- devices: 内に NSO に接続するためのセクションを追加する
+    - {NSO IP Address} の部分を実際の IP アドレスに書き換えること
+
+```
+nso:
+  os: nso
+  type: nso
+  tacacs:
+    username: admin
+  passwords:
+    tacacs: admin
+    line: admin
+    enable: admin
+  connections:
+    defaults:
+      class: unicon.Unicon
+      via: cli
+    con:
+      command: ncs_cli -C
+    cli:
+      protocol: ssh
+      ip: {NSO IP Address}
+      port: 2024
+```
+
+
+
+### その他の準備
 
 - robot コマンドでログを生成できるように Alias でオプションを設定
 
-`alias robot='robot -d archive/$(LC_ALL=C gdate +"%Y%m%d_%H%M%S")'`
-
+```
+alias robot='robot -d archive/$(LC_ALL=C gdate +"%Y%m%d_%H%M%S")'
+```
 
 - Jupyter ノートブックを起動 (動作確認とデモ3 で利用する)
 `jupyter-notebook &`
@@ -217,7 +371,7 @@ Report:  ***onicdemo/demo/archive/20181028_112114/report.html
 - robot コマンドでテストを実行
 `robot demo2.robot`
 
-- 出力例. このデモではあえて
+- 出力例. このデモではあえて JSON 出力をコンソールログにも表示させています
 ```
 (venv)***$ robot demo2.robot
 ==============================================================================
@@ -263,8 +417,28 @@ Report:  ***onicdemo/demo/archive/20181028_113639/report.html
 
 - "NSOへの接続（デモ3)" のセクションへ移動しテストを実行
 
--
+- コマンド実行が成功することを確認
 
+- ロールバックができることを確認
+
+![demo3-rollback-1](images/demo3-rollback-1.png)
+
+
+- ポイント
+    - NSO を使うことで、テスト環境のロールバックが可能。
+    - そのほか、コンフィグ時のエラーハンドリングなど、pyATS だけでは面倒な処理を NSO に代行してもらえる
+    - NSO はデバイスにコマンドを投入するために使うだけではなく、商用ネットワークへのサービスコンフィグ投入（例：VPN への新規顧客の追加など）の用途で使われる。商用ネットワークで行われる操作と同じことをテストするためには NSO を利用するのがよい
+
+
+
+## Disclaimer | 免責事項
+- 本項は予告なく改定することがあります。あらかじめご了承ください。
+- 本レポジトリの再利用は自由です。ただし、本レポジトリのファイルを使用したことによる一切の損害について、開発者は責任を負いません。
+- 本レポジトリは開発者が個人の立場で作成・メンテナンスしているものであり、Cisco Systems 社とは一切関係ありません。
+
+## Privacy Policy | プライバシーポリシー
+- 本項は予告なく改定することがあります。あらかじめご了承ください。
+- 開発者は、法的要請その他の相応の理由がある場合を除いて、第三者にユーザの個人情報を提供しません。
 
 
 
