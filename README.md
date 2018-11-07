@@ -152,7 +152,7 @@ cd ncs-run
 - cisco-ios および cisco-nx の NED を packages ディレクトリに展開・配置しておきます
 - 注: 評価版を利用している場合は、NSO のインストールディレクトリ配下の packages/neds にあるものを利用してください
 
-```
+```bash
 $ pwd
 /home/cisco/ncs-run/packages
 $ ls
@@ -161,7 +161,7 @@ cisco-ios  cisco-nx
 
 - NSO CLI にアクセスして NED を読み込みます
 
-```
+```bash
 ncs_cli -u admin
 packages reload
 ```
@@ -189,7 +189,7 @@ reload-result {
 - VIRL 環境変数を設定
     - {VIRL_IP} に自身の環境に合わせた値を設定してください
 
-```
+```bash
 export VIRL_HOST={VIRL_IP}
 export VIRL_USERNAME=guest
 export VIRL_PASSWORD=guest
@@ -197,13 +197,13 @@ export VIRL_PASSWORD=guest
 
 - VIRL トポロジファイルの確認
 
-```
+```bash
 cat topology.virl
 ```
 
 
 - VIRL シミュレーションの起動
-```
+```bash
 cd; cd onicdemo/demo
 virl ls
 virl up
@@ -215,7 +215,7 @@ virl nodes
 
 - VIRL トポロジから pyATS 用テストベッドファイルを生成
 
-```
+```bash
 virl generate pyats
 => default_testbed.yaml ファイルが生成される
 ```
@@ -224,7 +224,7 @@ virl generate pyats
 - NSO 環境変数の設定
     - {NSO_IP} を自身の環境のものと合わせる
 
-```
+```bash
 export NSO_HOST={NSO_IP}
 export NSO_USERNAME=cisco
 export NSO_PASSWORD=cisco
@@ -233,7 +233,7 @@ export NSO_PASSWORD=cisco
 - VIRL トポロジから NSO にデバイスを登録
     - Note: nxos3 は失敗することがあります。そのまま進めてOK)
 
-```
+```bash
 virl generate nso --syncfrom
 ```
 
@@ -245,7 +245,7 @@ virl generate nso --syncfrom
 - 上記で生成した `default_testbed.yaml` をエディタで編集します
 - tacacs セクションと passwords セクションを環境変数形式でなく、すべて直打ちで cisco に変更します
 
-```
+```yaml
     tacacs:
         username: cisco
     passwords:
@@ -257,7 +257,7 @@ virl generate nso --syncfrom
 - devices: セクション内の ios1 の alias を uut に変更する
     - 必須。uut が無いと robot 実行時に KeyError が出てしまうようです。出展は確認中です [TODO]
 
-```
+```yaml
     ios1:
       alias: uut
 ```
@@ -265,7 +265,7 @@ virl generate nso --syncfrom
 - devices: セクション内に NSO に接続するためのセクションを追加する
     - {NSO IP Address} の部分を実際の IP アドレスに書き換えてください
 
-```
+```yaml
 nso:
   os: nso
   type: nso
