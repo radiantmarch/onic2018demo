@@ -8,7 +8,7 @@ ONIC 2018 講演 [1] で行った pyATS + NSO + VIRL のデモ用のレポジト
 
   [775e7e8b]: ./presentations/onic2018_cisco_netdevops_pyats_nso_ss_v1.1.pdf "PDF"
 
-この README ファイルはデモを実行するための情報を記載しています。
+この README ファイルはデモを実行するための情報を記載しています。個別の技術については以下を参照してください。
 
 - pyATS の概要についてはこちら: https://developer.cisco.com/site/pyats/
 
@@ -99,42 +99,42 @@ virlutils
 
 ### VIRL のインストール
 
-ブログを参照してください: https://qiita.com/radiantmarch/items/a3c0685d8a4c7468e878
+- ブログを参照してください: https://qiita.com/radiantmarch/items/a3c0685d8a4c7468e878
 
-公式ガイドは http://virl.cisco.com/
+- 公式ガイドは http://virl.cisco.com/
 
 インストール後、デモを実行する PC から VIRL に接続できるようにしておいてください
 
 
 ### NSO のインストール
 
-- NSO を購入していない場合、NSO のトライアル版がこちらからダウンロードできます [Getting NSO][9316747d]
+- NSO を購入していない場合、NSO のトライアル版がこちらからダウンロードできます [Getting NSO][9316747d]
 
   [9316747d]: https://developer.cisco.com/docs/nso/#!getting-nso/getting-nso "Getting NSO"
 
     - トライアル版に付属している NED は最新版ではなく制限がありますのでご注意ください。
+    - [2018/11/6 追記] [Cisco Japan Blog](https://gblogs.cisco.com/jp/2018/11/getting-nso/) に評価版 NSO の解説が掲載されました
 
 - インストール方法については、Cisco Community にガイドがありますので参照してください [NSO How To Install][449aed00]
 
   [449aed00]: https://community.cisco.com/t5/%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%A4%E3%83%B3%E3%83%95%E3%83%A9%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%83%81%E3%83%A3-%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/nso-%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E6%96%B9%E6%B3%95/ta-p/3164587 "NSO How To Install"
 
 
-- NSO をインストールする先のログイン情報は username: cisco passwor: cisco にしておきます
-    - 異なる場合は、この先の設定を適宜読み替えてください
+- NSO をインストールする先のログイン情報は username: cisco passwor: cisco にしておきます。お使いの環境で異なる場合は、この先の設定を適宜読み替えてください
 
 
-- インストール後
+- NSO インストール後、ランタイムディレクトリを作成します
 ```
 cd
 ncs-setup --dest ncs-run
 cd ncs-run
 ```
 
-- ncs.conf ファイルを編集します
+- ncs.conf ファイルを編集します。変更内容:
     - デフォルトの Syntax スタイルを c (cisco) にします
     - ssh port 2024 版で NSO CLI に直接接続できるようにします
 
-```
+```xml
 <cli>
   <enabled>true</enabled>
   <style>c</style>
@@ -145,11 +145,12 @@ cd ncs-run
   </ssh>
 ```
 
-- デモ用 PC から接続できるか確認します
+- デモ用 PC から NSO に接続できるか確認します
 `ssh -l cisco -p 2024 {NSO_IP}`
 
 
 - cisco-ios および cisco-nx の NED を packages ディレクトリに展開・配置しておきます
+- 注: 評価版を利用している場合は、NSO のインストールディレクトリ配下の packages/neds にあるものを利用してください
 
 ```
 $ pwd
@@ -165,6 +166,13 @@ ncs_cli -u admin
 packages reload
 ```
 
+- 以下のように result true が表示されていれば成功です
+```
+reload-result {
+    package cisco-ios
+    result true
+}
+```
 
 
 
@@ -234,8 +242,8 @@ virl generate nso --syncfrom
 
 ### テストベッドファイルを環境に合わせて修正
 
-- 上記で生成した default_testbed.yaml をエディタで編集します
-- tacacs セクションと passwords セクションを環境変数でなくすべて直打ちで cisco に変更します
+- 上記で生成した `default_testbed.yaml` をエディタで編集します
+- tacacs セクションと passwords セクションを環境変数形式でなく、すべて直打ちで cisco に変更します
 
 ```
     tacacs:
@@ -247,7 +255,7 @@ virl generate nso --syncfrom
 ```
 
 - devices: セクション内の ios1 の alias を uut に変更する
-    - 必須。uut が無いと robot 実行時に KeyError が出てしまうようです
+    - 必須。uut が無いと robot 実行時に KeyError が出てしまうようです。出展は確認中です [TODO]
 
 ```
     ios1:
@@ -284,7 +292,7 @@ nso:
 ### その他の準備
 
 - デモ用PC 上で GNU ツールが使えるようにする (Mac の場合)
-    - brew install coreutils
+    - `brew install coreutils`
 
 - デモ用PC 上で、robot コマンドでログを生成できるように Alias でオプションを設定
     - Mac でない場合は gdate の部分を適宜修正してください
@@ -298,10 +306,9 @@ alias robot='robot -d archive/$(LC_ALL=C gdate +"%Y%m%d_%H%M%S")'
 
 - ブラウザが開くので `ONIC Demo Note.ipynb` を開く
 
-- 上から順番にコマンドを実行し、成功することを確認する
-    - Note: テスト後にそれぞれのデバイスから切断することを忘れない。例) ios1.disconnect()
-    - 切断していないとこのセッションがコンソール接続を専有してしまい、このあとの robot コマンドでの接続がうまくいかない。
-
+- ノートブックの上から順番にコマンドを実行し、成功することを確認する
+    - **Note**: テスト後にそれぞれのデバイスからセッション切断することを忘れない。例) `ios1.disconnect()`
+    - セッションを切断していないと、このセッションがコンソール接続を専有してしまい、このあとの robot コマンドでの接続が失敗します。
 
 
 ## デモ手順
@@ -359,7 +366,7 @@ Report:  ***onicdemo/demo/archive/20181028_112114/report.html
 図: IOS でのコマンド実行結果
 
 
-- サマリー
+- **サマリー**
     - robot フレームワークとその裏で動作する pyATS/Unicon ライブラリを利用して、ルータに接続しコマンドを実行
     - コマンド出力に基づいてテストを行い Pass/Fail の判定を出力
     - ログやテスト結果が自動的にレポート出力される
@@ -405,8 +412,8 @@ Report:  ***onicdemo/demo/archive/20181028_113639/report.html
 - 出力の中の Original JSON のテキストを https://jsonformatter.curiousconcept.com/ などで整形して確認
     - list_of_neighbors をキーとするエントリに、ネイバーのリストが表示されている
 
-- ポイント
-    - Genie ライブラリの一つである Parser の genie.libs.parser.show_bgp.ShowBgpAllNeighbors を使ってコマンド出力をパース
+- **ポイント**
+    - Genie ライブラリの一つである Parser の _genie.libs.parser.show_bgp.ShowBgpAllNeighbors_ を使ってコマンド出力をパース
     - 通常のテキスト出力では抽出が難しい情報も、構造化データ (JSON) で取得できる
     - Genie ライブラリには、こうした Parser の他に、特定機能のテストに必要なコンフィグ変更を実行してくれる Trigger や、テスト実行後の正常性判定をしてくれる Verifier も備えている。
 
@@ -416,7 +423,7 @@ Report:  ***onicdemo/demo/archive/20181028_113639/report.html
 
 - 前置き
     - デモ1, デモ2 では、テスト後、元の状態に戻す（ロールバックする）ためのコマンドをわざわざ投入していた
-    - NSO を使うとロールバックが簡単にできる
+    - NSO 経由でデバイスを設定すればロールバックが簡単にできる（それだけがメリットではないけれど）
 
 - Jupyter Notebook を開く (デモ準備で開いている)
 
@@ -424,15 +431,31 @@ Report:  ***onicdemo/demo/archive/20181028_113639/report.html
 
 - コマンド実行が成功することを確認
 
-- ロールバックができることを確認
+- ロールバックができることを確認。画面例:
 
 ![demo3-rollback-1](images/demo3-rollback-1.png)
 
 
-- ポイント
+- **ポイント**
     - NSO を使うことで、テスト環境のロールバックが可能。
     - そのほか、コンフィグ時のエラーハンドリングなど、pyATS だけでは面倒な処理を NSO に代行してもらえる
     - NSO はデバイスにコマンドを投入するために使うだけではなく、商用ネットワークへのサービスコンフィグ投入（例：VPN への新規顧客の追加など）の用途で使われる。商用ネットワークで行われる操作と同じことをテストするためには NSO を利用するのがよい
+
+
+## Reference
+参考リンクをまとめます
+
+- pyATS 開発に携わる日本人 (@ccieojisan) による、関連情報まとめページ
+    - [Link](https://ccieojisan.net/post-1664/)
+
+- pyATS Unicon ライブラリでサポートしているプラットフォーム一覧
+    - [Link](https://pubhub.devnetcloud.com/media/pyats-packages/docs/unicon/user_guide/introduction.html#supported-platforms)
+    - Linux なども操作可能
+
+- Genie ライブラリでサポートしているプラットフォームについて
+    - IOS-XE, NXOS, IOS-XR だが、ライブラリによって異なる。
+    - Conf/Ops/SDK/Robot ライブラリの場合 https://github.com/CiscoTestAutomation/genielibs
+    - Parser の場合 https://github.com/CiscoTestAutomation/genieparser/tree/master/src/genie/libs/parser
 
 
 
